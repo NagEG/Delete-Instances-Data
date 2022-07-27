@@ -7,6 +7,7 @@ from flask import Flask, request
 app = Flask(__name__)
 
 error_msgs = 'Please check AccessToken & Environemnt both are in sync?'
+
 def get_auth_headers(request):
     return {
         'x-auth-user': request.headers.get('x-auth-user', ''),
@@ -25,6 +26,8 @@ def delete_HugeData(index):
        return explorations(request, index, headers=headers)
     elif 'comparisons' in index.lower():
         return comparisons(request, index, headers=headers)
+    elif 'investigations' in index.lower():
+        return investigations(request, index, headers=headers)
     elif 'pipeline' in index.lower():
         return pipeline(request, index, headers=headers)
     else:
@@ -94,22 +97,49 @@ def sets(request, index, headers):
     environMent = index[0]
     environMent = index.split('/')
     get_all_ids = f'https://ediscover-{environMent[0]}.edatascientist.com/{SetArgs}?offset={offset}&limit={limit}'
-    print('DELETE API--->\n', get_all_ids)
+
     response = requests.get(get_all_ids, headers=headers)
     if response.status_code == 404 or response.status_code == 401:
         return error_msgs
     else:
         listSets = response.json()['_embedded']['sets']
-        print('LIST------>\n', listSets)
+        print('LIST------>\n', len(listSets))
         for oneEXP in listSets:
             id = oneEXP['id']
             deletableUrl = f'https://ediscover-{environMent[0]}.edatascientist.com/{SetArgs}/{id}?type=comparisons'
             response = requests.delete(deletableUrl, headers=headers)
-            if response.status_code == 200 or response.status_code == 204:
-                return f'{SetArgs.upper()} --> {id} DELETED SUCESSFULLY'
-            else:
-                return f'FAILED TO DELETE {SetArgs.upper()} --> {id}, {error_msgs}'
+            abc = f'{SetArgs.upper()} --> {id} DELETED SUCESSFULLY'
+            print(abc)
+        if response.status_code == 200 or response.status_code == 204:
+            return f'{SetArgs.upper()} --> {id} DELETED SUCESSFULLY'
+        else:
+            return f'FAILED TO DELETE {SetArgs.upper()} --> {id}, {error_msgs}'
 
+
+def investigations(request, index, headers):
+    offset = request.args.get('offset', 0)
+    limit = request.args.get('limit', 10)
+    investigationsArgs ='investigations' 
+    environMent = index[0]
+    environMent = index.split('/')
+    get_all_ids = f'https://ediscover-{environMent[0]}.edatascientist.com/{investigationsArgs}?offset={offset}&limit={limit}'
+
+    response = requests.get(get_all_ids, headers=headers)
+    if response.status_code == 404 or response.status_code == 401:
+        return error_msgs
+    else:
+        InvestigationList = response.json()['_embedded']['investigations']
+        print('LIST------>\n', len(InvestigationList))
+        for oneEXP in InvestigationList:
+            id = oneEXP['id']
+            deletableUrl = f'https://ediscover-{environMent[0]}.edatascientist.com/{investigationsArgs}/{id}'
+            response = requests.delete(deletableUrl, headers=headers)
+            abc = f'{investigationsArgs.upper()} --> {id} DELETED SUCESSFULLY'
+            print(abc)
+        if response.status_code == 200 or response.status_code == 204:
+            return f'{investigationsArgs.upper()} --> {id} DELETED SUCESSFULLY'
+        else:
+            return f'FAILED TO DELETE {investigationsArgs.upper()} --> {id}, {error_msgs}'
 
 def explorations(request, index, headers):
     offset = request.args.get('offset', 0)
@@ -124,7 +154,8 @@ def explorations(request, index, headers):
         id = oneEXP['id']
         deletableUrl = f'https://ediscover-{environMent[0]}.edatascientist.com/explorations/{id}?type=exploration'
         response = requests.delete(deletableUrl, headers=headers)
-        print('status_code', response.status_code)
+        abc = f'Deleted -->{id},  {response.status_code}'
+        print(abc)
     if response.status_code == 200 or response.status_code == 204:
         return f'{exporationArgs.upper()} DELETED SUCESSFULLY'
     else:
@@ -142,12 +173,13 @@ def comparisons(request, index, headers):
     if response.status_code == 404 or response.status_code == 401:
         return error_msgs
     else:
-        listExplorations = response.json()['_embedded']['comparisons']
-        print('LIST------>\n', listExplorations)
-        for oneEXP in listExplorations:
+        listComparisons = response.json()['_embedded']['comparisons']
+        for oneEXP in listComparisons:
             id = oneEXP['id']
             deletableUrl = f'https://ediscover-{environMent[0]}.edatascientist.com/{comparisonArgs}/{id}?type=comparisons'
             response = requests.delete(deletableUrl, headers=headers)
+            abc = f'Deleted -->{id},  {response.status_code}'
+            print(abc)
         if response.status_code == 200 or response.status_code == 204:
             return f'{comparisonArgs.upper()} DELETED SUCESSFULLY'
         else:
